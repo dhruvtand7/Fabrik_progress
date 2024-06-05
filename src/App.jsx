@@ -1,33 +1,32 @@
 import React, { useState } from 'react';
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useLoader } from '@react-three/fiber';
 import './App.css';
 import { OrbitControls, Stats } from '@react-three/drei';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
-import { useLoader } from '@react-three/fiber';
 import * as THREE from 'three';
 
 // Component to load the GLB file with Draco compression
 function Scene({ onObjectClick, onObjectHover }) {
   const path = "/sample/rio.glb";
-  const [highlightedMesh, setHighlightedMesh] = useState(null);
+  const gltf = useLoader(GLTFLoader, path, loader => {
+    const dracoLoader = new DRACOLoader();
+    dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
+    loader.setDRACOLoader(dracoLoader);
+  });
 
   const handlePointerOver = (e) => {
-    const mesh = e.object; // Access the mesh directly
-    setHighlightedMesh(mesh);
-    onObjectHover(mesh);
+    e.stopPropagation();
+    onObjectHover(e.object);
   };
+
   const handlePointerOut = () => {
-    setHighlightedMesh(null);
     onObjectHover(null);
   };
+
   return (
     <primitive
-      object={useLoader(GLTFLoader, path, (loader) => {
-        const dracoLoader = new DRACOLoader();
-        dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
-        loader.setDRACOLoader(dracoLoader);
-      }).scene}
+      object={gltf.scene}
       onPointerUp={(e) => {
         e.stopPropagation();
         onObjectClick(e.object);
@@ -42,6 +41,17 @@ function InfoPanel({ object, onColorChange, onMaterialChange }) {
   if (!object) return null;
 
   const { geometry, material } = object;
+  const materialTypes = [
+    'MeshBasicMaterial', 'MeshDepthMaterial', 'MeshDistanceMaterial',
+    'MeshLambertMaterial', 'MeshMatcapMaterial', 'MeshNormalMaterial',
+    'MeshPhongMaterial', 'MeshPhysicalMaterial', 'MeshStandardMaterial',
+    'MeshToonMaterial'
+  ];
+
+  const handleMaterialChange = (e) => {
+    const newMaterialType = e.target.value;
+    onMaterialChange(object, newMaterialType);
+  };
 
   return (
     <div className="info-panel">
@@ -49,20 +59,21 @@ function InfoPanel({ object, onColorChange, onMaterialChange }) {
       <p><strong>Name:</strong> {object.name}</p>
       <p><strong>Geometry:</strong> {geometry.type}</p>
       <p><strong>Material:</strong> {material ? material.type : 'None'}</p>
-      <div className="material-picker">
-        <h3>Select Material</h3>
-        <ul>
-          <li onClick={() => onMaterialChange(object, '/textures/basic.jpg')}>Basic</li>
-          <li onClick={() => onMaterialChange(object, '/textures/steel.jpg')}>Steel</li>
-          <li onClick={() => onMaterialChange(object, '/textures/wood.jpg')}>Wood</li>
-          <li onClick={() => onMaterialChange(object, '/textures/paper.jpg')}>Paper</li>
-        </ul>
-      </div>
+      
       <input
         type="color"
         value={`#${material.color.getHexString()}`}
         onChange={(e) => onColorChange(object, e.target.value)}
       />
+
+      <label>
+        Material Type:
+        <select value={material.type} onChange={handleMaterialChange}>
+          {materialTypes.map((type) => (
+            <option key={type} value={type}>{type}</option>
+          ))}
+        </select>
+      </label>
     </div>
   );
 }
@@ -76,21 +87,17 @@ export default function App() {
   };
 
   const handleObjectHover = (mesh) => {
-    if (mesh) {
-      if (mesh !== highlightedMesh) {
-        if (highlightedMesh) {
-          highlightedMesh.material.color.copy(highlightedMesh.originalColor);
-        }
-
-        mesh.originalColor = mesh.material.color.clone();
-        const darkerColor = mesh.originalColor.clone().multiplyScalar(0.8);
-        mesh.material.color = darkerColor;
-        setHighlightedMesh(mesh);
-      }
-    } else {
+    if (mesh && mesh !== highlightedMesh) {
       if (highlightedMesh) {
         highlightedMesh.material.color.copy(highlightedMesh.originalColor);
       }
+
+      mesh.originalColor = mesh.material.color.clone();
+      const darkerColor = mesh.originalColor.clone().multiplyScalar(0.8);
+      mesh.material.color.copy(darkerColor);
+      setHighlightedMesh(mesh);
+    } else if (!mesh && highlightedMesh) {
+      highlightedMesh.material.color.copy(highlightedMesh.originalColor);
       setHighlightedMesh(null);
     }
   };
@@ -99,11 +106,46 @@ export default function App() {
     object.material.color.set(color);
   };
 
-  const handleMaterialChange = (object, texturePath) => {
-    const textureLoader = new THREE.TextureLoader();
-    const texture = textureLoader.load(texturePath);
-    const material = new THREE.MeshBasicMaterial({ map: texture });
-    object.material = material;
+  const handleMaterialChange = (object, newMaterialType) => {
+    const materialParams = { color: object.material.color };
+
+    let newMaterial;
+    switch (newMaterialType) {
+      case 'MeshBasicMaterial':
+        newMaterial = new THREE.MeshBasicMaterial(materialParams);
+        break;
+      case 'MeshDepthMaterial':
+        newMaterial = new THREE.MeshDepthMaterial(materialParams);
+        break;
+      case 'MeshDistanceMaterial':
+        newMaterial = new THREE.MeshDistanceMaterial(materialParams);
+        break;
+      case 'MeshLambertMaterial':
+        newMaterial = new THREE.MeshLambertMaterial(materialParams);
+        break;
+      case 'MeshMatcapMaterial':
+        newMaterial = new THREE.MeshMatcapMaterial(materialParams);
+        break;
+      case 'MeshNormalMaterial':
+        newMaterial = new THREE.MeshNormalMaterial(materialParams);
+        break;
+      case 'MeshPhongMaterial':
+        newMaterial = new THREE.MeshPhongMaterial(materialParams);
+        break;
+      case 'MeshPhysicalMaterial':
+        newMaterial = new THREE.MeshPhysicalMaterial(materialParams);
+        break;
+      case 'MeshStandardMaterial':
+        newMaterial = new THREE.MeshStandardMaterial(materialParams);
+        break;
+      case 'MeshToonMaterial':
+        newMaterial = new THREE.MeshToonMaterial(materialParams);
+        break;
+      default:
+        return;
+    }
+
+    object.material = newMaterial;
   };
 
   return (

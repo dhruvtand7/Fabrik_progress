@@ -42,7 +42,7 @@ body {
   position: absolute;
   top: 10px;
   right: 10px;
-  width: 200px;
+  width: 250px;
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid #ccc;
   padding: 10px;
@@ -60,7 +60,6 @@ body {
   margin: 5px 0;
 }
 
-/* Styles for the MaterialPicker component within the InfoPanel */
 .info-panel .material-picker {
   margin-bottom: 10px;
 }
@@ -84,4 +83,30 @@ body {
 
 .info-panel .material-picker li:hover {
   background-color: #f0f0f0;
+}
+
+.info-panel .slider {
+  margin: 10px 0;
+}
+
+.info-panel .slider label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.info-panel .slider input {
+  width: 100%;
+}
+
+.info-panel .toggle {
+  margin: 10px 0;
+}
+
+.info-panel .toggle label {
+  display: flex;
+  align-items: center;
+}
+
+.info-panel .toggle input {
+  margin-left: 10px;
 }
