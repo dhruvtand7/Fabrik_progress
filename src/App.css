@@ -60,46 +60,16 @@ body {
   margin: 5px 0;
 }
 
-.info-panel .material-picker {
-  margin-bottom: 10px;
-}
-
-.info-panel .material-picker h3 {
-  margin: 10px 0 5px;
-  font-size: 16px;
-}
-
-.info-panel .material-picker ul {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-}
-
-.info-panel .material-picker li {
-  cursor: pointer;
-  padding: 3px;
-  border-radius: 3px;
-}
-
-.info-panel .material-picker li:hover {
-  background-color: #f0f0f0;
-}
-
-.info-panel .slider {
-  margin: 10px 0;
-}
-
-.info-panel .slider label {
+.info-panel label {
   display: block;
   margin-bottom: 5px;
 }
 
-.info-panel .slider input {
+.info-panel input[type="color"],
+.info-panel input[type="range"],
+.info-panel input[type="checkbox"],
+.info-panel select {
   width: 100%;
-}
-
-.info-panel .toggle {
-  margin: 10px 0;
 }
 
 .info-panel .toggle label {
@@ -107,6 +77,20 @@ body {
   align-items: center;
 }
 
-.info-panel .toggle input {
-  margin-left: 10px;
+.info-panel .toggle label,
+.info-panel label {
+  display: flex;
+  align-items: center;
+}
+
+.info-panel .toggle input[type="checkbox"] {
+  margin-right: 5px;
+}
+
+.info-panel label select {
+  width: calc(100% - 10px);
+}
+
+.info-panel label {
+  margin-bottom: 10px;
 }
