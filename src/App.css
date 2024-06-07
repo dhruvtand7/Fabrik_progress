@@ -49,6 +49,8 @@ body {
   border-radius: 5px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
   z-index: 1;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .info-panel h2 {
@@ -93,4 +95,63 @@ body {
 
 .info-panel label {
   margin-bottom: 10px;
+}
+
+.info-panel .slider label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.info-panel .slider input[type="range"] {
+  width: calc(100% - 10px);
+}
+
+.info-panel button {
+  width: 100%;
+  padding: 0.5em;
+  background: #007bff;
+  border: none;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.info-panel button:hover {
+  background: #0056b3;
+}
+
+.info-panel .slider label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.info-panel .slider input[type="range"] {
+  width: calc(100% - 10px);
+}
+
+.info-panel button {
+  width: 100%;
+  padding: 0.5em;
+  background: #007bff;
+  border: none;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.info-panel button:hover {
+  background: #0056b3;
+}
+.import-container {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 999; /* Ensure it's above other elements */
+}
+
+.import-container input[type="file"] {
+  width: 100px; /* Adjust width as needed */
+  height: 30px; /* Adjust height as needed */
 }

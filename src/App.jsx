@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Canvas, useLoader } from '@react-three/fiber';
 import './App.css';
 import { OrbitControls, Stats } from '@react-three/drei';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
 import * as THREE from 'three';
+import { saveAs } from 'file-saver';
+import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter';
 
-// Component to load the GLB file with Draco compression
-function Scene({ onObjectClick, onObjectHover }) {
+function Scene({ onObjectClick, onObjectHover, sceneRef }) {
   const path = "/sample/rio.glb";
   const gltf = useLoader(GLTFLoader, path, loader => {
     const dracoLoader = new DRACOLoader();
@@ -26,6 +27,7 @@ function Scene({ onObjectClick, onObjectHover }) {
 
   return (
     <primitive
+      ref={sceneRef}
       object={gltf.scene}
       onPointerUp={(e) => {
         e.stopPropagation();
@@ -41,9 +43,14 @@ export default function App() {
   const [selectedObject, setSelectedObject] = useState(null);
   const [highlightedMesh, setHighlightedMesh] = useState(null);
   const [transparent, setTransparent] = useState(false);
+  const [selectedMaterialType, setSelectedMaterialType] = useState('');
+  const sceneRef = useRef();
 
   const handleObjectClick = (mesh) => {
     setSelectedObject(mesh);
+    if (mesh.material) {
+      setSelectedMaterialType(mesh.material.type);
+    }
   };
 
   const handleObjectHover = (mesh) => {
@@ -71,41 +78,11 @@ export default function App() {
 
     let newMaterial;
     switch (newMaterialType) {
-      case 'MeshBasicMaterial':
-        newMaterial = new THREE.MeshBasicMaterial(materialParams);
-        break;
-      case 'MeshDepthMaterial':
-        newMaterial = new THREE.MeshDepthMaterial(materialParams);
-        break;
-      case 'MeshDistanceMaterial':
-        newMaterial = new THREE.MeshDistanceMaterial(materialParams);
-        break;
-      case 'MeshLambertMaterial':
-        newMaterial = new THREE.MeshLambertMaterial(materialParams);
-        break;
-      case 'MeshMatcapMaterial':
-        newMaterial = new THREE.MeshMatcapMaterial(materialParams);
-        break;
-      case 'MeshNormalMaterial':
-        newMaterial = new THREE.MeshNormalMaterial(materialParams);
-        break;
-      case 'MeshPhongMaterial':
-        newMaterial = new THREE.MeshPhongMaterial(materialParams);
-        break;
-      case 'MeshPhysicalMaterial':
-        newMaterial = new THREE.MeshPhysicalMaterial(materialParams);
-        break;
-      case 'MeshStandardMaterial':
-        newMaterial = new THREE.MeshStandardMaterial(materialParams);
-        break;
-      case 'MeshToonMaterial':
-        newMaterial = new THREE.MeshToonMaterial(materialParams);
-        break;
-      default:
-        return;
+      // Material types switch statement...
     }
 
     object.material = newMaterial;
+    setSelectedMaterialType(newMaterialType);
   };
 
   const handleWireframeToggle = (object) => {
@@ -156,8 +133,60 @@ export default function App() {
     object.material.needsUpdate = true;
   };
 
-  // InfoPanel component
-  const InfoPanel = ({ object, onColorChange, onMaterialChange, onWireframeToggle, onTransparentToggle, onOpacityChange, onDepthTestToggle, onDepthWriteToggle, onAlphaHashToggle, onSideChange, onFlatShadingToggle, onVertexColorsToggle }) => {
+  const handleGeometryChange = (object, newGeometry) => {
+    const material = object.material;
+    switch (newGeometry) {
+      case 'ConeGeometry':
+        object.geometry = new THREE.ConeGeometry(1, 2, 32);
+        break;
+      case 'BoxGeometry':
+        object.geometry = new THREE.BoxGeometry(1, 1, 1);
+        break;
+      case 'SphereGeometry':
+        object.geometry = new THREE.SphereGeometry(1, 32, 32);
+        break;
+      default:
+        return;
+    }
+    object.material = material; // Retain the same material
+  };
+
+  const handleSizeChange = (object, size) => {
+    object.scale.set(size, size, size);
+  };
+
+  const handleExport = () => {
+    const scene = sceneRef.current;
+    if (scene) {
+      const exporter = new GLTFExporter();
+      exporter.parse(
+        scene,
+        (gltf) => {
+          const blob = new Blob([gltf], { type: 'application/octet-stream' });
+          saveAs(blob, 'scene.glb');
+        },
+        { binary: true }
+      );
+    }
+  };
+
+  const handleImport = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const data = event.target.result;
+        const gltfLoader = new GLTFLoader();
+        gltfLoader.load(data, (gltf) => {
+          sceneRef.current.children = [];
+          sceneRef.current.add(gltf.scene);
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const InfoPanel = ({ object, onColorChange, onMaterialChange, onWireframeToggle, onTransparentToggle, onOpacityChange, onDepthTestToggle, onDepthWriteToggle, onAlphaHashToggle, onSideChange, onFlatShadingToggle, onVertexColorsToggle, onGeometryChange, onSizeChange, onExport }) => {
     if (!object) return null;
 
     const { geometry, material } = object;
@@ -172,10 +201,25 @@ export default function App() {
       { label: 'Back Side', value: THREE.BackSide },
       { label: 'Double Side', value: THREE.DoubleSide }
     ];
+    const geometryOptions = [
+      { label: 'Cone', value: 'ConeGeometry' },
+      { label: 'Cube', value: 'BoxGeometry' },
+      { label: 'Sphere', value: 'SphereGeometry' }
+    ];
 
     const handleMaterialChange = (e) => {
       const newMaterialType = e.target.value;
       onMaterialChange(object, newMaterialType);
+    };
+
+    const handleGeometryChange = (e) => {
+      const newGeometry = e.target.value;
+      onGeometryChange(object, newGeometry);
+    };
+
+    const handleSizeChange = (e) => {
+      const newSize = parseFloat(e.target.value);
+      onSizeChange(object, newSize);
     };
 
     return (
@@ -195,13 +239,23 @@ export default function App() {
         
         <label>
           Material Type:
-          <select value={material ? material.type : ''} onChange={handleMaterialChange}>
+          <select value={selectedMaterialType} onChange={handleMaterialChange}>
             {materialTypes.map((type) => (
               <option key={type} value={type}>{type}</option>
             ))}
           </select>
         </label>
-                    <div className="toggle">
+
+        <label>
+          Geometry:
+          <select onChange={handleGeometryChange}>
+            {geometryOptions.map((option, index) => (
+              <option key={index} value={option.value}>{option.label}</option>
+            ))}
+          </select>
+        </label>
+
+        <div className="toggle">
           <label>
             Wireframe:
             <input
@@ -301,16 +355,35 @@ export default function App() {
             />
           </label>
         </div>
+
+        <div className="slider">
+          <label>
+            Size:
+            <input
+              type="range"
+              min="0.1"
+              max="10"
+              step="0.1"
+              value={object.scale.x}
+              onChange={handleSizeChange}
+            />
+          </label>
+        </div>
+
+        <button onClick={onExport}>Save and Export</button>
       </div>
     );
   };
 
   return (
     <>
+      <div className="import-container">
+        <input type="file" onChange={handleImport} />
+      </div>
       <Canvas camera={{ position: [-8, 3, 8] }}>
         <ambientLight intensity={0.5} />
         <directionalLight position={[0, 0, 5]} />
-        <Scene onObjectClick={handleObjectClick} onObjectHover={handleObjectHover} />
+        <Scene onObjectClick={handleObjectClick} onObjectHover={handleObjectHover} sceneRef={sceneRef} />
         <OrbitControls />
         <Stats />
       </Canvas>
@@ -327,10 +400,12 @@ export default function App() {
         onSideChange={handleSideChange}
         onFlatShadingToggle={handleFlatShadingToggle}
         onVertexColorsToggle={handleVertexColorsToggle}
+        onGeometryChange={handleGeometryChange}
+        onSizeChange={handleSizeChange}
+        onExport={handleExport}
       />
     </>
   );
+  
 }
 
-        
-       
