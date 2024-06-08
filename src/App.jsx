@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Canvas, useLoader } from '@react-three/fiber';
 import './App.css';
 import { OrbitControls, Stats } from '@react-three/drei';
@@ -39,17 +39,218 @@ function Scene({ onObjectClick, onObjectHover, sceneRef }) {
   );
 }
 
+function InfoPanel({
+  object,
+  onColorChange,
+  onMaterialChange,
+  onWireframeToggle,
+  onTransparentToggle,
+  onOpacityChange,
+  onDepthTestToggle,
+  onDepthWriteToggle,
+  onAlphaHashToggle,
+  onSideChange,
+  onFlatShadingToggle,
+  onVertexColorsToggle,
+  onGeometryChange,
+  onSizeChange,
+  onExport,
+}) {
+  if (!object) return null;
+
+  const { geometry, material, name } = object;
+  const materialTypes = [
+    'MeshBasicMaterial',
+    'MeshLambertMaterial',
+    'MeshPhongMaterial',
+    'MeshStandardMaterial',
+    'MeshNormalMaterial',
+    'MeshPhysicalMaterial',
+    'MeshToonMaterial',
+    'MeshMatcapMaterial'
+  ];
+  const sideOptions = [
+    { label: 'Front Side', value: THREE.FrontSide },
+    { label: 'Back Side', value: THREE.BackSide },
+    { label: 'Double Side', value: THREE.DoubleSide },
+  ];
+  const geometryOptions = [
+    { label: 'Cone', value: 'ConeGeometry' },
+    { label: 'Cube', value: 'BoxGeometry' },
+    { label: 'Sphere', value: 'SphereGeometry' },
+  ];
+
+  return (
+    <div className="info-panel">
+      <h2>Info Panel</h2>
+      <p><strong>Name:</strong> {name ? name : 'Unnamed'}</p>
+      <p><strong>Type:</strong> {geometry.type}</p>
+      <p><strong>Material:</strong> {material.type}</p>
+      {material && (
+        <div>
+          <label>Color</label>
+          <input
+            type="color"
+            value={`#${material.color ? material.color.getHexString() : 'ffffff'}`}
+            onChange={(e) => onColorChange(object, e.target.value)}
+          />
+        </div>
+      )}
+
+      <div>
+        <label>Material</label>
+        <select value={material.type} onChange={(e) => onMaterialChange(object, e.target.value)}>
+          {materialTypes.map((type) => (
+            <option key={type} value={type}>
+              {type}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label>
+          <input
+            type="checkbox"
+            checked={material.wireframe}
+            onChange={() => onWireframeToggle(object)}
+          />
+          Wireframe
+        </label>
+      </div>
+      <div>
+        <label>
+          <input
+            type="checkbox"
+            checked={material.transparent}
+            onChange={() => onTransparentToggle(object)}
+          />
+          Transparent
+        </label>
+      </div>
+      {material.transparent && (
+        <div>
+          <label>Opacity</label>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.01"
+            value={material.opacity}
+            onChange={(e) => onOpacityChange(object, parseFloat(e.target.value))}
+          />
+        </div>
+      )}
+      <div>
+        <label>
+          <input
+            type="checkbox"
+            checked={material.depthTest}
+            onChange={() => onDepthTestToggle(object)}
+          />
+          Depth Test
+        </label>
+      </div>
+      <div>
+        <label>
+          <input
+            type="checkbox"
+            checked={material.depthWrite}
+            onChange={() => onDepthWriteToggle(object)}
+          />
+          Depth Write
+        </label>
+      </div>
+      <div>
+        <label>
+          <input
+            type="checkbox"
+            checked={material.alphaHash}
+            onChange={() => onAlphaHashToggle(object)}
+          />
+          Alpha Hash
+        </label>
+      </div>
+      <div>
+        <label>Side</label>
+        <select
+          value={material.side}
+          onChange={(e) => onSideChange(object, parseInt(e.target.value))}
+        >
+          {sideOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label>
+          <input
+            type="checkbox"
+            checked={material.flatShading}
+            onChange={() => onFlatShadingToggle(object)}
+          />
+          Flat Shading
+        </label>
+      </div>
+      <div>
+        <label>
+          <input
+            type="checkbox"
+            checked={material.vertexColors !== THREE.NoColors}
+            onChange={() => onVertexColorsToggle(object)}
+          />
+          Vertex Colors
+        </label>
+      </div>
+      <div>
+        <label>Geometry</label>
+        <select value={geometry.type} onChange={(e) => onGeometryChange(object, e.target.value)}>
+          {geometryOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label>Size</label>
+        <input
+          type="number"
+          step="0.1"
+          value={object.scale.x}
+          onChange={(e) => onSizeChange(object, parseFloat(e.target.value))}
+        />
+      </div>
+      <div>
+        <button onClick={onExport}>Export</button>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [selectedObject, setSelectedObject] = useState(null);
   const [highlightedMesh, setHighlightedMesh] = useState(null);
   const [transparent, setTransparent] = useState(false);
   const [selectedMaterialType, setSelectedMaterialType] = useState('');
+  const [opacity, setOpacity] = useState(1);
   const sceneRef = useRef();
+
+  useEffect(() => {
+    if (selectedObject && selectedObject.material) {
+      setSelectedMaterialType(selectedObject.material.type);
+      setTransparent(selectedObject.material.transparent);
+      setOpacity(selectedObject.material.opacity);
+    }
+  }, [selectedObject]);
 
   const handleObjectClick = (mesh) => {
     setSelectedObject(mesh);
     if (mesh.material) {
       setSelectedMaterialType(mesh.material.type);
+      setTransparent(mesh.material.transparent);
+      setOpacity(mesh.material.opacity);
     }
   };
 
@@ -58,7 +259,6 @@ export default function App() {
       if (highlightedMesh) {
         highlightedMesh.material.color.copy(highlightedMesh.originalColor);
       }
-
       mesh.originalColor = mesh.material.color.clone();
       const darkerColor = mesh.originalColor.clone().multiplyScalar(0.8);
       mesh.material.color.copy(darkerColor);
@@ -71,66 +271,104 @@ export default function App() {
 
   const handleColorChange = (object, color) => {
     object.material.color.set(color);
+    setSelectedObject({ ...object });
   };
 
   const handleMaterialChange = (object, newMaterialType) => {
     const materialParams = { color: object.material.color };
-
     let newMaterial;
     switch (newMaterialType) {
-      // Material types switch statement...
+      case 'MeshBasicMaterial':
+        newMaterial = new THREE.MeshBasicMaterial(materialParams);
+        break;
+      case 'MeshLambertMaterial':
+        newMaterial = new THREE.MeshLambertMaterial(materialParams);
+        break;
+      case 'MeshPhongMaterial':
+        newMaterial = new THREE.MeshPhongMaterial(materialParams);
+        break;
+      case 'MeshStandardMaterial':
+        newMaterial = new THREE.MeshStandardMaterial(materialParams);
+        break;
+      case 'MeshNormalMaterial':
+        newMaterial = new THREE.MeshNormalMaterial(materialParams);
+        break;
+      case 'MeshPhysicalMaterial':
+        newMaterial = new THREE.MeshPhysicalMaterial(materialParams);
+        break;
+      case 'MeshToonMaterial':
+        newMaterial = new THREE.MeshToonMaterial(materialParams);
+        break;
+      case 'MeshMatcapMaterial':
+        newMaterial = new THREE.MeshMatcapMaterial(materialParams);
+        break;
+      
+      default:
+        return;
     }
-
     object.material = newMaterial;
+    
+    
     setSelectedMaterialType(newMaterialType);
+    setSelectedObject({ ...object });
   };
 
   const handleWireframeToggle = (object) => {
     object.material.wireframe = !object.material.wireframe;
     object.material.needsUpdate = true;
+    setSelectedObject({ ...object });
   };
 
   const handleTransparentToggle = (object) => {
     object.material.transparent = !object.material.transparent;
     object.material.needsUpdate = true;
     setTransparent(object.material.transparent);
+    setSelectedObject({ ...object });
   };
 
   const handleOpacityChange = (object, opacity) => {
     if (object.material.transparent) {
+      setOpacity(opacity);
       object.material.opacity = opacity;
       object.material.needsUpdate = true;
+      setSelectedObject({ ...object });
     }
   };
-  
+
   const handleDepthTestToggle = (object) => {
     object.material.depthTest = !object.material.depthTest;
     object.material.needsUpdate = true;
+    setSelectedObject({ ...object });
   };
 
   const handleDepthWriteToggle = (object) => {
     object.material.depthWrite = !object.material.depthWrite;
     object.material.needsUpdate = true;
+    setSelectedObject({ ...object });
   };
 
   const handleAlphaHashToggle = (object) => {
     object.material.alphaHash = !object.material.alphaHash;
     object.material.needsUpdate = true;
+    setSelectedObject({ ...object });
   };
 
   const handleSideChange = (object, side) => {
     object.material.side = side;
     object.material.needsUpdate = true;
+    setSelectedObject({ ...object });
   };
 
   const handleFlatShadingToggle = (object) => {
     object.material.flatShading = !object.material.flatShading;
     object.material.needsUpdate = true;
+    setSelectedObject({ ...object });
   };
 
   const handleVertexColorsToggle = (object) => {
     object.material.vertexColors = object.material.vertexColors === THREE.NoColors ? THREE.VertexColors : THREE.NoColors;
     object.material.needsUpdate = true;
+    setSelectedObject({ ...object });
   };
 
   const handleGeometryChange = (object, newGeometry) => {
@@ -148,11 +386,13 @@ export default function App() {
       default:
         return;
     }
-    object.material = material; // Retain the same material
+    object.material = material;
+    setSelectedObject({ ...object });
   };
 
   const handleSizeChange = (object, size) => {
     object.scale.set(size, size, size);
+    setSelectedObject({ ...object });
   };
 
   const handleExport = () => {
@@ -186,201 +426,12 @@ export default function App() {
     }
   };
 
-  const InfoPanel = ({ object, onColorChange, onMaterialChange, onWireframeToggle, onTransparentToggle, onOpacityChange, onDepthTestToggle, onDepthWriteToggle, onAlphaHashToggle, onSideChange, onFlatShadingToggle, onVertexColorsToggle, onGeometryChange, onSizeChange, onExport }) => {
-    if (!object) return null;
-
-    const { geometry, material } = object;
-    const materialTypes = [
-      'MeshBasicMaterial', 'MeshDepthMaterial', 'MeshDistanceMaterial',
-      'MeshLambertMaterial', 'MeshMatcapMaterial', 'MeshNormalMaterial',
-      'MeshPhongMaterial', 'MeshPhysicalMaterial', 'MeshStandardMaterial',
-      'MeshToonMaterial'
-    ];
-    const sideOptions = [
-      { label: 'Front Side', value: THREE.FrontSide },
-      { label: 'Back Side', value: THREE.BackSide },
-      { label: 'Double Side', value: THREE.DoubleSide }
-    ];
-    const geometryOptions = [
-      { label: 'Cone', value: 'ConeGeometry' },
-      { label: 'Cube', value: 'BoxGeometry' },
-      { label: 'Sphere', value: 'SphereGeometry' }
-    ];
-
-    const handleMaterialChange = (e) => {
-      const newMaterialType = e.target.value;
-      onMaterialChange(object, newMaterialType);
-    };
-
-    const handleGeometryChange = (e) => {
-      const newGeometry = e.target.value;
-      onGeometryChange(object, newGeometry);
-    };
-
-    const handleSizeChange = (e) => {
-      const newSize = parseFloat(e.target.value);
-      onSizeChange(object, newSize);
-    };
-
-    return (
-      <div className="info-panel">
-        <h2>Object Info</h2>
-        <p><strong>Name:</strong> {object.name}</p>
-        <p><strong>Geometry:</strong> {geometry.type}</p>
-        <p><strong>Material:</strong> {material ? material.type : 'None'}</p>
-        
-        {material && material.color && (
-          <input
-            type="color"
-            value={`#${material.color.getHexString()}`}
-            onChange={(e) => onColorChange(object, e.target.value)}
-          />
-        )}
-        
-        <label>
-          Material Type:
-          <select value={selectedMaterialType} onChange={handleMaterialChange}>
-            {materialTypes.map((type) => (
-              <option key={type} value={type}>{type}</option>
-            ))}
-          </select>
-        </label>
-
-        <label>
-          Geometry:
-          <select onChange={handleGeometryChange}>
-            {geometryOptions.map((option, index) => (
-              <option key={index} value={option.value}>{option.label}</option>
-            ))}
-          </select>
-        </label>
-
-        <div className="toggle">
-          <label>
-            Wireframe:
-            <input
-              type="checkbox"
-              checked={material && material.wireframe}
-              onChange={() => onWireframeToggle(object)}
-            />
-          </label>
-        </div>
-        <div className="toggle">
-          <label>
-            Transparent:
-            <input
-              type="checkbox"
-              checked={transparent}
-              onChange={() => onTransparentToggle(object)}
-            />
-          </label>
-        </div>
-        <div className="slider">
-          <label>
-            Opacity:
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.01"
-              value={material ? material.opacity : 1}
-              onChange={(e) => onOpacityChange(object, parseFloat(e.target.value))}
-            />
-          </label>
-        </div>
-
-        <div className="toggle">
-          <label>
-            Depth Test:
-            <input
-              type="checkbox"
-              checked={material && material.depthTest}
-              onChange={() => onDepthTestToggle(object)}
-            />
-          </label>
-        </div>
-
-        <div className="toggle">
-          <label>
-            Depth Write:
-            <input
-              type="checkbox"
-              checked={material && material.depthWrite}
-              onChange={() => onDepthWriteToggle(object)}
-            />
-          </label>
-        </div>
-
-        <div className="toggle">
-          <label>
-            Alpha Hash:
-            <input
-              type="checkbox"
-              checked={material && material.alphaHash}
-              onChange={() => onAlphaHashToggle(object)}
-            />
-          </label>
-        </div>
-
-        <label>
-          Side:
-          <select
-            value={material ? material.side : ''}
-            onChange={(e) => onSideChange(object, parseInt(e.target.value))}
-          >
-            {sideOptions.map((option, index) => (
-              <option key={index} value={option.value}>{option.label}</option>
-            ))}
-          </select>
-        </label>
-
-        <div className="toggle">
-          <label>
-            Flat Shading:
-            <input
-              type="checkbox"
-              checked={material && material.flatShading}
-              onChange={() => onFlatShadingToggle(object)}
-            />
-          </label>
-        </div>
-
-        <div className="toggle">
-          <label>
-            Vertex Colors:
-            <input
-              type="checkbox"
-              checked={material && material.vertexColors === THREE.VertexColors}
-              onChange={() => onVertexColorsToggle(object)}
-            />
-          </label>
-        </div>
-
-        <div className="slider">
-          <label>
-            Size:
-            <input
-              type="range"
-              min="0.1"
-              max="10"
-              step="0.1"
-              value={object.scale.x}
-              onChange={handleSizeChange}
-            />
-          </label>
-        </div>
-
-        <button onClick={onExport}>Save and Export</button>
-      </div>
-    );
-  };
-
   return (
     <>
       <div className="import-container">
         <input type="file" onChange={handleImport} />
       </div>
-      <Canvas camera={{ position: [-8, 3, 8] }}>
+      <Canvas className="canvas-container" camera={{ position: [-8, 3, 8] }}>
         <ambientLight intensity={0.5} />
         <directionalLight position={[0, 0, 5]} />
         <Scene onObjectClick={handleObjectClick} onObjectHover={handleObjectHover} sceneRef={sceneRef} />
@@ -388,7 +439,7 @@ export default function App() {
         <Stats />
       </Canvas>
       <InfoPanel
-        object={highlightedMesh || selectedObject}
+        object={selectedObject}
         onColorChange={handleColorChange}
         onMaterialChange={handleMaterialChange}
         onWireframeToggle={handleWireframeToggle}
@@ -404,8 +455,6 @@ export default function App() {
         onSizeChange={handleSizeChange}
         onExport={handleExport}
       />
-    </>
+      </>
   );
-  
 }
-
