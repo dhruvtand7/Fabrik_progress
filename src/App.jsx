@@ -1,16 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Canvas, useLoader } from '@react-three/fiber';
+import { Canvas, useThree } from '@react-three/fiber';
 import './App.css';
-import { OrbitControls, Stats } from '@react-three/drei';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
+import { OrbitControls, Stats, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { saveAs } from 'file-saver';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+
 
 function Scene({ onObjectClick, onObjectHover, sceneRef }) {
   const path = "/sample/rio.glb";
-  const gltf = useLoader(GLTFLoader, path, loader => {
+  const { scene: gltfScene } = useGLTF(path, true, loader => {
     const dracoLoader = new DRACOLoader();
     dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
     loader.setDRACOLoader(dracoLoader);
@@ -28,7 +28,7 @@ function Scene({ onObjectClick, onObjectHover, sceneRef }) {
   return (
     <primitive
       ref={sceneRef}
-      object={gltf.scene}
+      object={gltfScene}
       onPointerUp={(e) => {
         e.stopPropagation();
         onObjectClick(e.object);
@@ -229,6 +229,29 @@ function InfoPanel({
   );
 }
 
+function ImportContainer({ onImport }) {
+  const handleImport = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const contents = e.target.result;
+        const loader = new GLTFLoader();
+        loader.parse(contents, '', (gltf) => {
+          onImport(gltf.scene);
+        });
+      };
+      reader.readAsArrayBuffer(file);
+    }
+  };
+
+  return (
+    <div className="import-container">
+      <input type="file" accept=".glb, .gltf" onChange={handleImport} />
+    </div>
+  );
+}
+
 export default function App() {
   const [selectedObject, setSelectedObject] = useState(null);
   const [highlightedMesh, setHighlightedMesh] = useState(null);
@@ -302,60 +325,48 @@ export default function App() {
       case 'MeshMatcapMaterial':
         newMaterial = new THREE.MeshMatcapMaterial(materialParams);
         break;
-      
       default:
-        return;
+        newMaterial = new THREE.MeshBasicMaterial(materialParams);
     }
     object.material = newMaterial;
-    
-    
-    setSelectedMaterialType(newMaterialType);
     setSelectedObject({ ...object });
+    setSelectedMaterialType(newMaterialType);
   };
 
   const handleWireframeToggle = (object) => {
     object.material.wireframe = !object.material.wireframe;
-    object.material.needsUpdate = true;
     setSelectedObject({ ...object });
   };
 
   const handleTransparentToggle = (object) => {
     object.material.transparent = !object.material.transparent;
-    object.material.needsUpdate = true;
-    setTransparent(object.material.transparent);
     setSelectedObject({ ...object });
+    setTransparent(object.material.transparent);
   };
 
-  const handleOpacityChange = (object, opacity) => {
-    if (object.material.transparent) {
-      setOpacity(opacity);
-      object.material.opacity = opacity;
-      object.material.needsUpdate = true;
-      setSelectedObject({ ...object });
-    }
+  const handleOpacityChange = (object, value) => {
+    object.material.opacity = value;
+    setSelectedObject({ ...object });
+    setOpacity(value);
   };
 
   const handleDepthTestToggle = (object) => {
     object.material.depthTest = !object.material.depthTest;
-    object.material.needsUpdate = true;
     setSelectedObject({ ...object });
   };
 
   const handleDepthWriteToggle = (object) => {
     object.material.depthWrite = !object.material.depthWrite;
-    object.material.needsUpdate = true;
     setSelectedObject({ ...object });
   };
 
   const handleAlphaHashToggle = (object) => {
-    object.material.alphaHash = !object.material.alphaHash;
-    object.material.needsUpdate = true;
+    object.material.alphaTest = !object.material.alphaTest;
     setSelectedObject({ ...object });
   };
 
-  const handleSideChange = (object, side) => {
-    object.material.side = side;
-    object.material.needsUpdate = true;
+  const handleSideChange = (object, value) => {
+    object.material.side = value;
     setSelectedObject({ ...object });
   };
 
@@ -371,22 +382,22 @@ export default function App() {
     setSelectedObject({ ...object });
   };
 
-  const handleGeometryChange = (object, newGeometry) => {
-    const material = object.material;
-    switch (newGeometry) {
+  const handleGeometryChange = (object, newGeometryType) => {
+    let newGeometry;
+    switch (newGeometryType) {
       case 'ConeGeometry':
-        object.geometry = new THREE.ConeGeometry(1, 2, 32);
+        newGeometry = new THREE.ConeGeometry(1, 1, 32);
         break;
       case 'BoxGeometry':
-        object.geometry = new THREE.BoxGeometry(1, 1, 1);
+        newGeometry = new THREE.BoxGeometry(1, 1, 1);
         break;
       case 'SphereGeometry':
-        object.geometry = new THREE.SphereGeometry(1, 32, 32);
+        newGeometry = new THREE.SphereGeometry(1, 32, 32);
         break;
       default:
-        return;
+        newGeometry = new THREE.BoxGeometry(1, 1, 1);
     }
-    object.material = material;
+    object.geometry = newGeometry;
     setSelectedObject({ ...object });
   };
 
@@ -396,46 +407,50 @@ export default function App() {
   };
 
   const handleExport = () => {
-    const scene = sceneRef.current;
-    if (scene) {
-      const exporter = new GLTFExporter();
+    const exporter = new GLTFExporter();
+    
+    const options = {
+      binary: true,
+      trs: false,
+      onlyVisible: true,
+      truncateDrawRange: true,
+      embedImages: true
+    };
+  
+    try {
       exporter.parse(
-        scene,
-        (gltf) => {
-          const blob = new Blob([gltf], { type: 'application/octet-stream' });
+        sceneRef.current, 
+        (result) => {
+          const output = options.binary ? result : JSON.stringify(result, null, 2);
+          const blob = new Blob([output], { type: options.binary ? 'application/octet-stream' : 'application/json' });
           saveAs(blob, 'scene.glb');
         },
-        { binary: true }
+        (error) => {
+          console.error('An error occurred during parsing', error);
+        },
+        options
       );
+    } catch (error) {
+      console.error('An unexpected error occurred during export:', error);
     }
   };
+  
 
-  const handleImport = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        const data = event.target.result;
-        const gltfLoader = new GLTFLoader();
-        gltfLoader.load(data, (gltf) => {
-          sceneRef.current.children = [];
-          sceneRef.current.add(gltf.scene);
-        });
-      };
-      reader.readAsDataURL(file);
-    }
+  const handleImport = (importedScene) => {
+    
+    sceneRef.current.clear();
+
+    
+    sceneRef.current.add(importedScene);
   };
-
   return (
-    <>
-      <div className="import-container">
-        <input type="file" onChange={handleImport} />
-      </div>
-      <Canvas className="canvas-container" camera={{ position: [-8, 3, 8] }}>
-        <ambientLight intensity={0.5} />
-        <directionalLight position={[0, 0, 5]} />
-        <Scene onObjectClick={handleObjectClick} onObjectHover={handleObjectHover} sceneRef={sceneRef} />
+    <div className="App">
+      <Canvas>
+        <ambientLight />
+        <directionalLight intensity={7.0}/>
+        <pointLight position={[10, 10, 10]} />
         <OrbitControls />
+        <Scene onObjectClick={handleObjectClick} onObjectHover={handleObjectHover} sceneRef={sceneRef} />
         <Stats />
       </Canvas>
       <InfoPanel
@@ -455,6 +470,8 @@ export default function App() {
         onSizeChange={handleSizeChange}
         onExport={handleExport}
       />
-      </>
+      <ImportContainer onImport={handleImport} />
+    </div>
   );
 }
+
