@@ -9,7 +9,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 
 function Scene({ onObjectClick, onObjectHover, sceneRef }) {
-  const path = "/sample/rio.glb";
+  const path = "/sample/rick.glb";
   const { scene: gltfScene } = useGLTF(path, true, loader => {
     const dracoLoader = new DRACOLoader();
     dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
@@ -260,6 +260,7 @@ export default function App() {
   const [opacity, setOpacity] = useState(1);
   const sceneRef = useRef();
 
+  
   useEffect(() => {
     if (selectedObject && selectedObject.material) {
       setSelectedMaterialType(selectedObject.material.type);
