@@ -15,14 +15,7 @@ function Scene({ onObjectClick, onObjectHover, sceneRef }) {
     loader.setDRACOLoader(dracoLoader);
   });
 
-  const handlePointerOver = (e) => {
-    e.stopPropagation();
-    onObjectHover(e.object);
-  };
-
-  const handlePointerOut = () => {
-    onObjectHover(null);
-  };
+  
 
   return (
     <primitive
@@ -32,8 +25,7 @@ function Scene({ onObjectClick, onObjectHover, sceneRef }) {
         e.stopPropagation();
         onObjectClick(e.object);
       }}
-      onPointerOver={handlePointerOver}
-      onPointerOut={handlePointerOut}
+      
     />
   );
 }
@@ -255,6 +247,7 @@ export default function App() {
   const [selectedObject, setSelectedObject] = useState(null);
   const sceneRef = useRef();
 
+
   useEffect(() => {
     if (selectedObject && selectedObject.material) {
       // Reset other properties as needed
@@ -264,10 +257,7 @@ export default function App() {
   const handleObjectClick = (mesh) => {
     setSelectedObject(mesh);
   };
-
-  const handleObjectHover = (mesh) => {
-    // Handle hover effects if needed
-  };
+  
 
   const handleColorChange = (object, color) => {
     const newMaterial = object.material.clone();
@@ -306,6 +296,7 @@ export default function App() {
       default:
         newMaterial = new THREE.MeshBasicMaterial({ color: object.material.color });
     }
+    newMaterial.userData = { originalMaterial: object.material };
     object.material = newMaterial;
     setSelectedObject({ ...object });
   };
@@ -441,7 +432,7 @@ export default function App() {
         <directionalLight intensity={7.0}/>
         <pointLight position={[10, 10, 10]} />
         <OrbitControls />
-        <Scene onObjectClick={handleObjectClick} onObjectHover={handleObjectHover} sceneRef={sceneRef} />
+        <Scene onObjectClick={handleObjectClick} sceneRef={sceneRef} />
         <Stats />
       </Canvas>
       <InfoPanel
