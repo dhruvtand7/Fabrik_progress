@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import { saveAs } from 'file-saver';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
 
 function Scene({ onObjectClick, onObjectHover, sceneRef }) {
   const path = "/sample/rick.glb";
@@ -15,7 +16,14 @@ function Scene({ onObjectClick, onObjectHover, sceneRef }) {
     loader.setDRACOLoader(dracoLoader);
   });
 
-  
+  const handlePointerOver = (e) => {
+    e.stopPropagation();
+    onObjectHover(e.object);
+  };
+
+  const handlePointerOut = () => {
+    onObjectHover(null);
+  };
 
   return (
     <primitive
@@ -25,7 +33,8 @@ function Scene({ onObjectClick, onObjectHover, sceneRef }) {
         e.stopPropagation();
         onObjectClick(e.object);
       }}
-      
+      onPointerOver={handlePointerOver}
+      onPointerOut={handlePointerOut}
     />
   );
 }
@@ -245,25 +254,46 @@ function ImportContainer({ onImport }) {
 
 export default function App() {
   const [selectedObject, setSelectedObject] = useState(null);
+  const [selectedObjectState, setSelectedObjectState] = useState(null);
   const sceneRef = useRef();
-
+  const selectedObjectRef = useRef(null);
+  const [highlightedMesh, setHighlightedMesh] = useState(null);
 
   useEffect(() => {
     if (selectedObject && selectedObject.material) {
-      // Reset other properties as needed
+      selectedObjectRef.current = selectedObject;
     }
   }, [selectedObject]);
 
   const handleObjectClick = (mesh) => {
     setSelectedObject(mesh);
+    setSelectedObjectState(mesh.uuid);
   };
-  
+
+  const handleObjectHover = (mesh) => {
+    if (mesh && mesh !== highlightedMesh) {
+      if (highlightedMesh) {
+        highlightedMesh.material.color.copy(highlightedMesh.originalColor);
+      }
+      mesh.originalColor = mesh.material.color.clone();
+      const darkerColor = mesh.originalColor.clone().multiplyScalar(0.8);
+      mesh.material.color.copy(darkerColor);
+      setHighlightedMesh(mesh);
+    } else if (!mesh && highlightedMesh) {
+      highlightedMesh.material.color.copy(highlightedMesh.originalColor);
+      setHighlightedMesh(null);
+    }
+  };
+
+  const updateSelectedObject = () => {
+    setSelectedObjectState((prev) => prev + 1);
+  };
 
   const handleColorChange = (object, color) => {
     const newMaterial = object.material.clone();
     newMaterial.color.set(color);
     object.material = newMaterial;
-    setSelectedObject({ ...object });
+    updateSelectedObject();
   };
 
   const handleMaterialChange = (object, newMaterialType) => {
@@ -296,58 +326,57 @@ export default function App() {
       default:
         newMaterial = new THREE.MeshBasicMaterial({ color: object.material.color });
     }
-    newMaterial.userData = { originalMaterial: object.material };
     object.material = newMaterial;
-    setSelectedObject({ ...object });
+    updateSelectedObject();
   };
 
   const handleWireframeToggle = (object) => {
     const newMaterial = object.material.clone();
     newMaterial.wireframe = !newMaterial.wireframe;
     object.material = newMaterial;
-    setSelectedObject({ ...object });
+    updateSelectedObject();
   };
 
   const handleTransparentToggle = (object) => {
     const newMaterial = object.material.clone();
     newMaterial.transparent = !newMaterial.transparent;
     object.material = newMaterial;
-    setSelectedObject({ ...object });
+    updateSelectedObject();
   };
 
   const handleOpacityChange = (object, value) => {
     const newMaterial = object.material.clone();
     newMaterial.opacity = value;
     object.material = newMaterial;
-    setSelectedObject({ ...object });
+    updateSelectedObject();
   };
 
   const handleDepthTestToggle = (object) => {
     const newMaterial = object.material.clone();
     newMaterial.depthTest = !newMaterial.depthTest;
     object.material = newMaterial;
-    setSelectedObject({ ...object });
+    updateSelectedObject();
   };
 
   const handleDepthWriteToggle = (object) => {
     const newMaterial = object.material.clone();
     newMaterial.depthWrite = !newMaterial.depthWrite;
     object.material = newMaterial;
-    setSelectedObject({ ...object });
+    updateSelectedObject();
   };
 
   const handleAlphaHashToggle = (object) => {
     const newMaterial = object.material.clone();
     newMaterial.alphaHash = !newMaterial.alphaHash;
     object.material = newMaterial;
-    setSelectedObject({ ...object });
+    updateSelectedObject();
   };
 
   const handleSideChange = (object, value) => {
     const newMaterial = object.material.clone();
     newMaterial.side = value;
     object.material = newMaterial;
-    setSelectedObject({ ...object });
+    updateSelectedObject();
   };
 
   const handleFlatShadingToggle = (object) => {
@@ -355,7 +384,7 @@ export default function App() {
     newMaterial.flatShading = !newMaterial.flatShading;
     newMaterial.needsUpdate = true;
     object.material = newMaterial;
-    setSelectedObject({ ...object });
+    updateSelectedObject();
   };
 
   const handleVertexColorsToggle = (object) => {
@@ -363,7 +392,7 @@ export default function App() {
     newMaterial.vertexColors = newMaterial.vertexColors === THREE.NoColors ? THREE.VertexColors : THREE.NoColors;
     newMaterial.needsUpdate = true;
     object.material = newMaterial;
-    setSelectedObject({ ...object });
+    updateSelectedObject();
   };
 
   const handleGeometryChange = (object, newGeometryType) => {
@@ -382,17 +411,17 @@ export default function App() {
         newGeometry = new THREE.BoxGeometry(1, 1, 1);
     }
     object.geometry = newGeometry;
-    setSelectedObject({ ...object });
+    updateSelectedObject();
   };
 
   const handleSizeChange = (object, size) => {
     object.scale.set(size, size, size);
-    setSelectedObject({ ...object });
+    updateSelectedObject();
   };
 
   const handleExport = () => {
     const exporter = new GLTFExporter();
-    
+
     const options = {
       binary: true,
       trs: false,
@@ -400,10 +429,10 @@ export default function App() {
       truncateDrawRange: true,
       embedImages: true
     };
-  
+
     try {
       exporter.parse(
-        sceneRef.current, 
+        sceneRef.current,
         (result) => {
           const output = options.binary ? result : JSON.stringify(result, null, 2);
           const blob = new Blob([output], { type: options.binary ? 'application/octet-stream' : 'application/json' });
@@ -418,7 +447,6 @@ export default function App() {
       console.error('An unexpected error occurred during export:', error);
     }
   };
-  
 
   const handleImport = (importedScene) => {
     sceneRef.current.clear();
@@ -432,7 +460,7 @@ export default function App() {
         <directionalLight intensity={7.0}/>
         <pointLight position={[10, 10, 10]} />
         <OrbitControls />
-        <Scene onObjectClick={handleObjectClick} sceneRef={sceneRef} />
+        <Scene onObjectClick={handleObjectClick} onObjectHover={handleObjectHover} sceneRef={sceneRef} />
         <Stats />
       </Canvas>
       <InfoPanel
@@ -456,4 +484,3 @@ export default function App() {
     </div>
   );
 }
-
