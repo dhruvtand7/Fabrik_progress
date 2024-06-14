@@ -137,3 +137,41 @@ body {
 .import-container input[type="file"]::-webkit-file-upload-button:hover {
   background-color: #558bcc;
 }
+.info-close .close-button {
+  /* Your close button styles here */
+  background-color: transparent;
+  color: #fff;
+  border: none;
+  font-size: 0.8rem;
+  padding: 3px 5px;
+  cursor: pointer;
+  text-align: left;
+  /* Reset styles (optional) */
+  display: inline-block;
+  padding: 0;
+  margin: 0;
+  border: none;
+  text-decoration: none;
+}
+
+
+.info-close .close-button button:hover {
+  color: #66b2ff;
+  border: none;
+  font-size: 0.8rem;
+  padding: 3px 5px;
+  cursor: pointer;
+  text-align: left;
+  /* Reset styles (optional) */
+  display: inline-block;
+  padding: 0;
+  margin: 0;
+  border: none;
+  text-decoration: none;
+}
+
+.info-close {
+  color: #66b2ff;
+  align-content: left;
+  size-adjust: 30%;
+}

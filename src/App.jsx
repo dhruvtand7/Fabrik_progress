@@ -41,6 +41,7 @@ function Scene({ onObjectClick, onObjectHover, sceneRef }) {
 
 function InfoPanel({
   object,
+  onClose,
   onColorChange,
   onMaterialChange,
   onWireframeToggle,
@@ -82,7 +83,17 @@ function InfoPanel({
 
   return (
     <div className="info-panel">
-      <h2>Info Panel</h2>
+      <div className="info-close">
+        <button className="close-button" onClick={onClose}>
+            X
+        </button>
+      </div>
+      <div className="info-header">
+        
+        <h2>Info Panel</h2>
+        
+      </div>
+
       <p><strong>Name:</strong> {name ? name : 'Unnamed'}</p>
       <p><strong>Type:</strong> {geometry.type}</p>
       <p><strong>Material:</strong> {material.type}</p>
@@ -255,6 +266,7 @@ function ImportContainer({ onImport }) {
 export default function App() {
   const [selectedObject, setSelectedObject] = useState(null);
   const [selectedObjectState, setSelectedObjectState] = useState(null);
+  const [showInfoPanel, setShowInfoPanel] = useState(false); 
   const sceneRef = useRef();
   const selectedObjectRef = useRef(null);
   const [highlightedMesh, setHighlightedMesh] = useState(null);
@@ -268,6 +280,7 @@ export default function App() {
   const handleObjectClick = (mesh) => {
     setSelectedObject(mesh);
     setSelectedObjectState(mesh.uuid);
+    setShowInfoPanel(true); 
   };
 
   const handleObjectHover = (mesh) => {
@@ -418,6 +431,10 @@ export default function App() {
     object.scale.set(size, size, size);
     updateSelectedObject();
   };
+  const handleCloseInfoPanel = () => {
+    setShowInfoPanel(false);
+    setSelectedObject(null);
+  };
 
   const handleExport = () => {
     const exporter = new GLTFExporter();
@@ -463,8 +480,10 @@ export default function App() {
         <Scene onObjectClick={handleObjectClick} onObjectHover={handleObjectHover} sceneRef={sceneRef} />
         <Stats />
       </Canvas>
+      {showInfoPanel && (
       <InfoPanel
         object={selectedObject}
+        onClose={handleCloseInfoPanel}
         onColorChange={handleColorChange}
         onMaterialChange={handleMaterialChange}
         onWireframeToggle={handleWireframeToggle}
@@ -480,6 +499,7 @@ export default function App() {
         onSizeChange={handleSizeChange}
         onExport={handleExport}
       />
+    )}
       <ImportContainer onImport={handleImport} />
     </div>
   );
