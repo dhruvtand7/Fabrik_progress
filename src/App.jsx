@@ -9,6 +9,16 @@ import InfoPanel from './InfoPanel';
 import ImportContainer from './ImportContainer';
 import './App.css';
 import * as THREE from 'three';
+import {
+  Environment,
+  Lightformer,
+  
+  PerspectiveCamera,
+  ContactShadows,
+  MeshReflectorMaterial,
+  Reflector,
+  
+} from "@react-three/drei";
 
 export default function App() {
   const [selectedObject, setSelectedObject] = useState(null);
@@ -220,6 +230,36 @@ export default function App() {
   return (
     <div className="App">
       <Canvas>
+      <Environment background>
+                    
+                    <color attach="background" args={["#15151a"]} />
+
+                    <Lightformer intensity={1.5} rotation-x={Math.PI / 2} position={[0, 4, -9]} scale={[10, 1, 1]} />
+                    <Lightformer intensity={1} rotation-x={Math.PI / 2} position={[0, 4, -6]} scale={[10, 1, 1]} />
+                    <Lightformer intensity={1.5} rotation-x={Math.PI / 2} position={[0, 4, -3]} scale={[10, 1, 1]} />
+                    <Lightformer intensity={1} rotation-x={Math.PI / 2} position={[0, 4, 0]} scale={[10, 1, 1]} />
+                    <Lightformer intensity={1.5} rotation-x={Math.PI / 2} position={[0, 4, 3]} scale={[10, 1, 1]} />
+                    <Lightformer intensity={1} rotation-x={Math.PI / 2} position={[0, 4, 6]} scale={[10, 1, 1]} />
+                    <Lightformer intensity={1.5} rotation-x={Math.PI / 2} position={[0, 4, 9]} scale={[10, 1, 1]} />
+                    {/* Key */}
+                    {/* <Lightformer form="ring" color="red" intensity={10} scale={2} position={[10, 7, 10]} onUpdate={(self) => self.lookAt(0, 0, 0)} /> */}
+                    
+                </Environment>
+                <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.2, 0]} scale={[100, 100, 1]}>
+                    <planeGeometry args={[100, 100]} />
+                    <MeshReflectorMaterial 
+                        blur={[400, 100]}
+                        resolution={1024}
+                        mixBlur={1}
+                        mixStrength={60}
+                        depthScale={1}
+                        minDepthThreshold={0.85}
+                        maxDepthThreshold={1}
+                        color="#101010"
+                        roughness={0.7}
+                        metalness={0.5}
+                    />
+                </mesh>
         <ambientLight />
         <directionalLight intensity={7.0}/>
         <pointLight position={[10, 10, 10]} />
