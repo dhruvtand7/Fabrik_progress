@@ -10,6 +10,8 @@ import InfoPanel from './InfoPanel';
 import ImportContainer from './ImportContainer';
 import CloudContainer from './CloudContainer';
 import './App.css';
+import CloudExportContainer from './CloudExportContainer';
+
 
 export default function App() {
   const [selectedObject, setSelectedObject] = useState(null);
@@ -214,6 +216,7 @@ export default function App() {
 
   return (
     <div className="app-container">
+      <CloudExportContainer sceneRef={sceneRef} />
       <Canvas
         camera={{ position: [3, 3, 3], fov: 75 }}
         onPointerMissed={() => handleObjectHover(null)}
@@ -288,6 +291,7 @@ export default function App() {
         <ImportContainer onImport={handleImport} />
         <CloudContainer onImport={handleImport} />
       </div>
+      
     </div>
   );
 }

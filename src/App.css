@@ -1,3 +1,4 @@
+/* Existing global styles */
 * {
   box-sizing: border-box;
 }
@@ -29,9 +30,16 @@ body {
   -webkit-font-smoothing: antialiased;
   background: #f0f0f0;
 }
+
 .app-container {
-  position: fixed; width: 100%; height: 100%; overflow: hidden; pointer-events: auto; touch-action: none;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: auto;
+  touch-action: none;
 }
+
 .canvas-container {
   flex: 1;
   height: 100%;
@@ -40,7 +48,6 @@ body {
 }
 
 .App {
-  
   top: 0;
   left: 0;
   width: 100%;
@@ -49,7 +56,8 @@ body {
   overflow: hidden;
 }
 
-.info-panel { 
+/* Styles for info panel */
+.info-panel {
   position: fixed;
   top: 0;
   right: 0;
@@ -110,47 +118,6 @@ body {
   background-color: #558bcc;
 }
 
-.import-container, .export-container, .cloud-container {
-  position: fixed;
-  left: 20px;
-  background-color: #1a1a1a;
-  padding: 10px;
-  border-radius: 5px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
-  z-index: 2000;
-}
-
-.import-container {
-  bottom: 20px;      
-}
-
-.export-container {
-  bottom: 40px;
-}
-
-.cloud-container {
-  bottom: 70px;
-}
-
-.import-container input[type="file"], .export-container input[type="file"], .cloud-container input[type="file"] {
-  color: #f0f0f0;
-  
-}
-
-.import-container input[type="file"]::-webkit-file-upload-button, .export-container input[type="file"]::-webkit-file-upload-button, .cloud-container input[type="file"]::-webkit-file-upload-button {
-  padding: 5px 10px;
-  border: none;
-  border-radius: 5px;
-  background-color: #66b2ff;
-  color: #1a1a1a;
-  cursor: pointer;
-  
-}
-
-.import-container input[type="file"]::-webkit-file-upload-button:hover, .export-container input[type="file"]::-webkit-file-upload-button:hover, .cloud-container input[type="file"]::-webkit-file-upload-button:hover {
-  background-color: #558bcc;
-}
-
 .info-close .close-button {
   background-color: transparent;
   color: #fff;
@@ -165,30 +132,68 @@ body {
 }
 
 .info-close .close-button:hover {
-  
-    color: #66b2ff;
-    border: none;
-    font-size: 0.8rem;
-    padding: 3px 5px;
-    cursor: pointer;
-    text-align: left;
-    /* Reset styles (optional) */
-    display: inline-block;
-    padding: 0;
-    margin: 0;
-    border: none;
-    text-decoration: none;
-  
+  color: #66b2ff;
 }
 
-.info-close {
-  color: #66b2ff;
-  align-content: left;
-  size-adjust: 30%;}
+/* Styles for containers */
+.import-container,
+.export-container,
+.cloud-container,
+.cloud-export-container {
+  position: fixed;
+  left: 20px;
+  background-color: #1a1a1a;
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+  z-index: 2000;
+}
 
-  .cloud-container label {
-    color: #ffffff; /* Set the color to white */
-  }
-  .import-container label {
-    color:  #ffffff;
-  }
+.import-container {
+  bottom: 20px;
+}
+
+.export-container {
+  bottom: 40px;
+}
+
+.cloud-container {
+  bottom: 70px;
+}
+
+.cloud-export-container {
+  bottom: 110px; /* Adjusted for placement */
+}
+
+.import-container input[type="file"],
+.export-container input[type="file"],
+.cloud-container input[type="file"],
+.cloud-export-container input[type="file"] {
+  color: #f0f0f0;
+}
+
+.import-container input[type="file"]::-webkit-file-upload-button,
+.export-container input[type="file"]::-webkit-file-upload-button,
+.cloud-container input[type="file"]::-webkit-file-upload-button,
+.cloud-export-container input[type="file"]::-webkit-file-upload-button {
+  padding: 5px 10px;
+  border: none;
+  border-radius: 5px;
+  background-color: #66b2ff;
+  color: #1a1a1a;
+  cursor: pointer;
+}
+
+.import-container input[type="file"]::-webkit-file-upload-button:hover,
+.export-container input[type="file"]::-webkit-file-upload-button:hover,
+.cloud-container input[type="file"]::-webkit-file-upload-button:hover,
+.cloud-export-container input[type="file"]::-webkit-file-upload-button:hover {
+  background-color: #558bcc;
+}
+
+/* Additional styles for cloud and import containers */
+.cloud-container label,
+.import-container label,
+.cloud-export-container label {
+  color: #ffffff; /* Set the color to white */
+}
