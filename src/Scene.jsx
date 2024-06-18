@@ -1,10 +1,10 @@
 // Scene.jsx
-import React from 'react';
+import React, { forwardRef } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
 
-function Scene({ onObjectClick, onObjectHover, sceneRef }) {
-  const path = "/sample/rick.glb";
+const Scene = forwardRef(({ onObjectClick, onObjectHover }, ref) => {
+  const path = "/sample/rio.glb";
   const { scene: gltfScene } = useGLTF(path, true, loader => {
     const dracoLoader = new DRACOLoader();
     dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
@@ -22,7 +22,7 @@ function Scene({ onObjectClick, onObjectHover, sceneRef }) {
 
   return (
     <primitive
-      ref={sceneRef}
+      ref={ref}
       object={gltfScene}
       onPointerUp={(e) => {
         e.stopPropagation();
@@ -32,6 +32,6 @@ function Scene({ onObjectClick, onObjectHover, sceneRef }) {
       onPointerOut={handlePointerOut}
     />
   );
-}
+});
 
 export default Scene;

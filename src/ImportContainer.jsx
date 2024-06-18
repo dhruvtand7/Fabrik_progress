@@ -20,7 +20,8 @@ function ImportContainer({ onImport }) {
 
   return (
     <div className="import-container">
-      <input type="file" accept=".glb, .gltf" onChange={handleImport} />
+      <label htmlFor="file-select">Import a file from local storage:</label>
+      <input type="file" accept=".glb, .gltf" onChange={handleImport}  />
     </div>
   );
 }

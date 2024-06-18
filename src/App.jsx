@@ -1,29 +1,20 @@
 // App.jsx
-import React, { useState, useRef, useEffect} from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Stats } from '@react-three/drei';
+import { OrbitControls, Stats, Environment, Lightformer, MeshReflectorMaterial } from '@react-three/drei';
 import { saveAs } from 'file-saver';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter';
+import * as THREE from 'three';
 import Scene from './Scene';
 import InfoPanel from './InfoPanel';
 import ImportContainer from './ImportContainer';
+import CloudContainer from './CloudContainer';
 import './App.css';
-import * as THREE from 'three';
-import {
-  Environment,
-  Lightformer,
-  
-  PerspectiveCamera,
-  ContactShadows,
-  MeshReflectorMaterial,
-  Reflector,
-  
-} from "@react-three/drei";
 
 export default function App() {
   const [selectedObject, setSelectedObject] = useState(null);
   const [selectedObjectState, setSelectedObjectState] = useState(null);
-  const [showInfoPanel, setShowInfoPanel] = useState(false); 
+  const [showInfoPanel, setShowInfoPanel] = useState(false);
   const sceneRef = useRef();
   const selectedObjectRef = useRef(null);
   const [highlightedMesh, setHighlightedMesh] = useState(null);
@@ -37,7 +28,7 @@ export default function App() {
   const handleObjectClick = (mesh) => {
     setSelectedObject(mesh);
     setSelectedObjectState(mesh.uuid);
-    setShowInfoPanel(true); 
+    setShowInfoPanel(true);
   };
 
   const handleObjectHover = (mesh) => {
@@ -188,6 +179,7 @@ export default function App() {
     object.scale.set(size, size, size);
     updateSelectedObject();
   };
+
   const handleCloseInfoPanel = () => {
     setShowInfoPanel(false);
     setSelectedObject(null);
@@ -201,25 +193,18 @@ export default function App() {
       trs: false,
       onlyVisible: true,
       truncateDrawRange: true,
-      embedImages: true
+      embedImages: true,
+      maxTextureSize: 1024 || Infinity,
     };
 
-    try {
-      exporter.parse(
-        sceneRef.current,
-        (result) => {
-          const output = options.binary ? result : JSON.stringify(result, null, 2);
-          const blob = new Blob([output], { type: options.binary ? 'application/octet-stream' : 'application/json' });
-          saveAs(blob, 'scene.glb');
-        },
-        (error) => {
-          console.error('An error occurred during parsing', error);
-        },
-        options
-      );
-    } catch (error) {
-      console.error('An unexpected error occurred during export:', error);
-    }
+    exporter.parse(sceneRef.current, (result) => {
+      if (result instanceof ArrayBuffer) {
+        saveAs(new Blob([result], { type: 'application/octet-stream' }), 'scene.glb');
+      } else {
+        const output = JSON.stringify(result, null, 2);
+        saveAs(new Blob([output], { type: 'text/plain' }), 'scene.gltf');
+      }
+    }, options);
   };
 
   const handleImport = (importedScene) => {
@@ -228,9 +213,22 @@ export default function App() {
   };
 
   return (
-    <div className="App">
-      <Canvas>
-      <Environment background>
+    <div className="app-container">
+      <Canvas
+        camera={{ position: [3, 3, 3], fov: 75 }}
+        onPointerMissed={() => handleObjectHover(null)}
+      >
+        <Scene
+          ref={sceneRef}
+          onObjectClick={handleObjectClick}
+          onObjectHover={handleObjectHover}
+          highlightedMesh={highlightedMesh}
+        />
+        <OrbitControls />
+        <Stats />
+        <Environment preset="city" />
+        
+        <Environment background>
                     
                     <color attach="background" args={["#15151a"]} />
 
@@ -263,31 +261,33 @@ export default function App() {
         <ambientLight />
         <directionalLight intensity={7.0}/>
         <pointLight position={[10, 10, 10]} />
-        <OrbitControls />
-        <Scene onObjectClick={handleObjectClick} onObjectHover={handleObjectHover} sceneRef={sceneRef} />
-        <Stats />
+        
       </Canvas>
       {showInfoPanel && (
-      <InfoPanel
-        object={selectedObject}
-        onClose={handleCloseInfoPanel}
-        onColorChange={handleColorChange}
-        onMaterialChange={handleMaterialChange}
-        onWireframeToggle={handleWireframeToggle}
-        onTransparentToggle={handleTransparentToggle}
-        onOpacityChange={handleOpacityChange}
-        onDepthTestToggle={handleDepthTestToggle}
-        onDepthWriteToggle={handleDepthWriteToggle}
-        onAlphaHashToggle={handleAlphaHashToggle}
-        onSideChange={handleSideChange}
-        onFlatShadingToggle={handleFlatShadingToggle}
-        onVertexColorsToggle={handleVertexColorsToggle}
-        onGeometryChange={handleGeometryChange}
-        onSizeChange={handleSizeChange}
-        onExport={handleExport}
-      />
-    )}
-      <ImportContainer onImport={handleImport} />
+        <InfoPanel
+          object={selectedObject}
+          onColorChange={handleColorChange}
+          onMaterialChange={handleMaterialChange}
+          onWireframeToggle={handleWireframeToggle}
+          onTransparentToggle={handleTransparentToggle}
+          onOpacityChange={handleOpacityChange}
+          onDepthTestToggle={handleDepthTestToggle}
+          onDepthWriteToggle={handleDepthWriteToggle}
+          onAlphaHashToggle={handleAlphaHashToggle}
+          onSideChange={handleSideChange}
+          onFlatShadingToggle={handleFlatShadingToggle}
+          onVertexColorsToggle={handleVertexColorsToggle}
+          onGeometryChange={handleGeometryChange}
+          onSizeChange={handleSizeChange}
+          onClose={handleCloseInfoPanel}
+          onExport={handleExport}
+        />
+      )}
+      <div className="button-container">
+        
+        <ImportContainer onImport={handleImport} />
+        <CloudContainer onImport={handleImport} />
+      </div>
     </div>
   );
 }
