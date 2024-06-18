@@ -162,7 +162,7 @@ body {
 }
 
 .cloud-export-container {
-  bottom: 110px; /* Adjusted for placement */
+  bottom: 115px; /* Adjusted for placement */
 }
 
 .import-container input[type="file"],
