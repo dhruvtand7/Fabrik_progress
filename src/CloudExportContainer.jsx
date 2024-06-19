@@ -1,8 +1,8 @@
 import React from 'react';
-import { ref, uploadBytesResumable } from './firebase/storage';
-import { saveAs } from 'file-saver';
+import { ref, uploadBytesResumable } from 'firebase/storage';
+
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter';
-import { storage } from './firebaseConfig'; // Adjust path as per your firebase configuration
+import { storage } from './firebaseConfig.jsx'; // Adjust path as per your firebase configuration
 
 const CloudExportContainer = ({ sceneRef }) => {
   const handleExportToCloud = async () => {
@@ -20,8 +20,10 @@ const CloudExportContainer = ({ sceneRef }) => {
     exporter.parse(sceneRef.current, async (result) => {
       try {
         if (result instanceof ArrayBuffer) {
+          
           const file = new Blob([result], { type: 'application/octet-stream' });
           const storageRef = ref(storage, `models/glb/${Date.now()}_scene.glb`);
+          
           const uploadTask = uploadBytesResumable(storageRef, file);
 
           uploadTask.on('state_changed',
@@ -40,11 +42,12 @@ const CloudExportContainer = ({ sceneRef }) => {
           
         } else {
           console.log('Result is not an ArrayBuffer, exporting as JSON:', result);
+          
           const output = JSON.stringify(result, null, 2);
           const file = new Blob([output], { type: 'text/plain' });
           const storageRef = ref(storage, `models/glb/${Date.now()}_scene.gltf`);
           const uploadTask = uploadBytesResumable(storageRef, file);
-
+          console.log(storageRef);
           uploadTask.on('state_changed',
             (snapshot) => {
               // Progress monitoring if needed
