@@ -1,5 +1,5 @@
 import React from 'react';
-import { ref, uploadBytesResumable } from 'firebase/storage';
+import { ref, uploadBytesResumable } from './firebase/storage';
 import { saveAs } from 'file-saver';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter';
 import { storage } from './firebaseConfig'; // Adjust path as per your firebase configuration
