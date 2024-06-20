@@ -3,7 +3,10 @@ import { ref, uploadBytesResumable } from 'firebase/storage';
 
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter';
 import { storage } from './firebaseConfig.jsx'; // Adjust path as per your firebase configuration
+import { Button } from './components/apfel/button';
 
+
+import { Container, Text } from '@react-three/uikit'
 const CloudExportContainer = ({ sceneRef }) => {
   const handleExportToCloud = async () => {
     const exporter = new GLTFExporter();
@@ -70,10 +73,14 @@ const CloudExportContainer = ({ sceneRef }) => {
   };
 
   return (
-    <div className="cloud-export-container">
+    <Container flexDirection="column" md={{ flexDirection: 'row' }}  gap={32} >
       
-      <button onClick={handleExportToCloud}>Export GLB to Cloud</button>
-    </div>
+        <Button Variant = 'pill' onClick={handleExportToCloud} size="lg" >
+            <Text>
+                Save File
+            </Text>
+        </Button>
+    </Container>
   );
 };
 

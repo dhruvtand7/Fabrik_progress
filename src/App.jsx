@@ -11,6 +11,7 @@ import ImportContainer from './ImportContainer';
 import CloudContainer from './CloudContainer';
 import './App.css';
 import CloudExportContainer from './CloudExportContainer';
+import { Fullscreen, Root } from '@react-three/uikit';
 
 
 export default function App() {
@@ -20,7 +21,7 @@ export default function App() {
   const sceneRef = useRef();
   const selectedObjectRef = useRef(null);
   const [highlightedMesh, setHighlightedMesh] = useState(null);
-
+ 
   useEffect(() => {
     if (selectedObject && selectedObject.material) {
       selectedObjectRef.current = selectedObject;
@@ -32,6 +33,8 @@ export default function App() {
     setSelectedObjectState(mesh.uuid);
     setShowInfoPanel(true);
   };
+
+ 
 
   const handleObjectHover = (mesh) => {
     if (mesh && mesh !== highlightedMesh) {
@@ -216,11 +219,20 @@ export default function App() {
 
   return (
     <div className="app-container">
-      <CloudExportContainer sceneRef={sceneRef} />
+      
+      
+      
       <Canvas
         camera={{ position: [3, 3, 3], fov: 75 }}
         onPointerMissed={() => handleObjectHover(null)}
       >
+        <group position={[0,-3,4]}>
+        <Root sizeX={3} sizeY={7} sizeZ={7} flexDirection="column" >
+          <CloudExportContainer sceneRef={sceneRef} />
+        </Root>
+        
+        </group>
+        
         <Scene
           ref={sceneRef}
           onObjectClick={handleObjectClick}
