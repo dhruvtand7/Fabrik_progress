@@ -1,4 +1,3 @@
-// App.jsx
 import React, { useState, useRef, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Stats, Environment, Lightformer, MeshReflectorMaterial } from '@react-three/drei';
@@ -11,17 +10,21 @@ import ImportContainer from './ImportContainer';
 import CloudContainer from './CloudContainer';
 import './App.css';
 import CloudExportContainer from './CloudExportContainer';
-import { Fullscreen, Root } from '@react-three/uikit';
-
+import { Fullscreen, Root, Text } from '@react-three/uikit';
+import ExplosionConfetti from './components/Confetti';
+import InfoPanel2D from './InfoPanel2D';
 
 export default function App() {
   const [selectedObject, setSelectedObject] = useState(null);
   const [selectedObjectState, setSelectedObjectState] = useState(null);
   const [showInfoPanel, setShowInfoPanel] = useState(false);
+  const [showInfoPanel2D, setShowInfoPanel2D] = useState(false);
   const sceneRef = useRef();
   const selectedObjectRef = useRef(null);
   const [highlightedMesh, setHighlightedMesh] = useState(null);
- 
+  const [isExploding, setIsExploding] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+
   useEffect(() => {
     if (selectedObject && selectedObject.material) {
       selectedObjectRef.current = selectedObject;
@@ -32,9 +35,8 @@ export default function App() {
     setSelectedObject(mesh);
     setSelectedObjectState(mesh.uuid);
     setShowInfoPanel(true);
+    setShowInfoPanel2D(true);
   };
-
- 
 
   const handleObjectHover = (mesh) => {
     if (mesh && mesh !== highlightedMesh) {
@@ -189,6 +191,10 @@ export default function App() {
     setShowInfoPanel(false);
     setSelectedObject(null);
   };
+  const handleCloseInfoPanel2D = () => {
+    setShowInfoPanel2D(false);
+    
+  };
 
   const handleExport = () => {
     const exporter = new GLTFExporter();
@@ -217,22 +223,59 @@ export default function App() {
     sceneRef.current.add(importedScene);
   };
 
+  const showSuccessMessageAndConfetti = () => {
+    setShowSuccessMessage(true);
+    setIsExploding(true);
+    setTimeout(() => {
+      setIsExploding(false);
+      setShowSuccessMessage(false);
+    }, 5000);
+  };
+
   return (
     <div className="app-container">
-      
-      
-      
       <Canvas
-        camera={{ position: [3, 3, 3], fov: 75 }}
+        camera={{ position: [0, 3, 10], fov: 75 }}
         onPointerMissed={() => handleObjectHover(null)}
+        gl={{ localClippingEnabled: true }}
       >
-        <group position={[0,-3,4]}>
-        <Root sizeX={3} sizeY={7} sizeZ={7} flexDirection="column" >
-          <CloudExportContainer sceneRef={sceneRef} />
-        </Root>
-        
+        <ExplosionConfetti isExploding={isExploding} />
+        {showSuccessMessage && (
+          <Root>
+          <Text position={[0, 5, 0]} fontSize={2} color="white">
+            Model Saved Successfully
+          </Text>
+          </Root>
+        )}
+        <group position={[0, -3, 4]}>
+          <Root sizeX={2} sizeY={7} sizeZ={7} flexDirection="column">
+            <CloudExportContainer sceneRef={sceneRef} onSuccess={showSuccessMessageAndConfetti} />
+          </Root>
         </group>
-        
+        <group position={[3, 1, 4]}>
+          <Root sizeX={2.5} sizeY={10} sizeZ={7} flexDirection="column">
+            {showInfoPanel && (
+              <InfoPanel
+                object={selectedObject}
+                onColorChange={handleColorChange}
+                onMaterialChange={handleMaterialChange}
+                onWireframeToggle={handleWireframeToggle}
+                onTransparentToggle={handleTransparentToggle}
+                onOpacityChange={handleOpacityChange}
+                onDepthTestToggle={handleDepthTestToggle}
+                onDepthWriteToggle={handleDepthWriteToggle}
+                onAlphaHashToggle={handleAlphaHashToggle}
+                onSideChange={handleSideChange}
+                onFlatShadingToggle={handleFlatShadingToggle}
+                onVertexColorsToggle={handleVertexColorsToggle}
+                onGeometryChange={handleGeometryChange}
+                onSizeChange={handleSizeChange}
+                onClose={handleCloseInfoPanel}
+                onExport={handleExport}
+              />
+            )}
+          </Root>
+        </group>
         <Scene
           ref={sceneRef}
           onObjectClick={handleObjectClick}
@@ -242,68 +285,43 @@ export default function App() {
         <OrbitControls />
         <Stats />
         <Environment preset="city" />
-        
         <Environment background>
-                    
-                    <color attach="background" args={["#15151a"]} />
-
-                    <Lightformer intensity={1.5} rotation-x={Math.PI / 2} position={[0, 4, -9]} scale={[10, 1, 1]} />
-                    <Lightformer intensity={1} rotation-x={Math.PI / 2} position={[0, 4, -6]} scale={[10, 1, 1]} />
-                    <Lightformer intensity={1.5} rotation-x={Math.PI / 2} position={[0, 4, -3]} scale={[10, 1, 1]} />
-                    <Lightformer intensity={1} rotation-x={Math.PI / 2} position={[0, 4, 0]} scale={[10, 1, 1]} />
-                    <Lightformer intensity={1.5} rotation-x={Math.PI / 2} position={[0, 4, 3]} scale={[10, 1, 1]} />
-                    <Lightformer intensity={1} rotation-x={Math.PI / 2} position={[0, 4, 6]} scale={[10, 1, 1]} />
-                    <Lightformer intensity={1.5} rotation-x={Math.PI / 2} position={[0, 4, 9]} scale={[10, 1, 1]} />
-                    {/* Key */}
-                    {/* <Lightformer form="ring" color="red" intensity={10} scale={2} position={[10, 7, 10]} onUpdate={(self) => self.lookAt(0, 0, 0)} /> */}
-                    
-                </Environment>
-                <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.2, 0]} scale={[100, 100, 1]}>
-                    <planeGeometry args={[100, 100]} />
-                    <MeshReflectorMaterial 
-                        blur={[400, 100]}
-                        resolution={1024}
-                        mixBlur={1}
-                        mixStrength={60}
-                        depthScale={1}
-                        minDepthThreshold={0.85}
-                        maxDepthThreshold={1}
-                        color="#101010"
-                        roughness={0.7}
-                        metalness={0.5}
-                    />
-                </mesh>
+          <color attach="background" args={["#212e42"]} />
+          <Lightformer intensity={1.5} rotation-x={Math.PI / 2} position={[0, 4, -9]} scale={[10, 1, 1]} />
+          <Lightformer intensity={1} rotation-x={Math.PI / 2} position={[0, 4, -6]} scale={[10, 1, 1]} />
+          <Lightformer intensity={1.5} rotation-x={Math.PI / 2} position={[0, 4, -3]} scale={[10, 1, 1]} />
+          <Lightformer intensity={1} rotation-x={Math.PI / 2} position={[0, 4, 0]} scale={[10, 1, 1]} />
+          <Lightformer intensity={1.5} rotation-x={Math.PI / 2} position={[0, 4, 3]} scale={[10, 1, 1]} />
+          <Lightformer intensity={1} rotation-x={Math.PI / 2} position={[0, 4, 6]} scale={[10, 1, 1]} />
+          <Lightformer intensity={1.5} rotation-x={Math.PI / 2} position={[0, 4, 9]} scale={[10, 1, 1]} />
+        </Environment>
         <ambientLight />
-        <directionalLight intensity={7.0}/>
+        <directionalLight intensity={7.0} />
         <pointLight position={[10, 10, 10]} />
-        
       </Canvas>
-      {showInfoPanel && (
-        <InfoPanel
-          object={selectedObject}
-          onColorChange={handleColorChange}
-          onMaterialChange={handleMaterialChange}
-          onWireframeToggle={handleWireframeToggle}
-          onTransparentToggle={handleTransparentToggle}
-          onOpacityChange={handleOpacityChange}
-          onDepthTestToggle={handleDepthTestToggle}
-          onDepthWriteToggle={handleDepthWriteToggle}
-          onAlphaHashToggle={handleAlphaHashToggle}
-          onSideChange={handleSideChange}
-          onFlatShadingToggle={handleFlatShadingToggle}
-          onVertexColorsToggle={handleVertexColorsToggle}
-          onGeometryChange={handleGeometryChange}
-          onSizeChange={handleSizeChange}
-          onClose={handleCloseInfoPanel}
-          onExport={handleExport}
-        />
+      
+      {showInfoPanel2D && (
+              <InfoPanel2D
+                object={selectedObject}
+                onColorChange={handleColorChange}
+                onMaterialChange={handleMaterialChange}
+                
+                onTransparentToggle={handleTransparentToggle}
+                onOpacityChange={handleOpacityChange}
+                onDepthTestToggle={handleDepthTestToggle}
+                onDepthWriteToggle={handleDepthWriteToggle}
+                onAlphaHashToggle={handleAlphaHashToggle}
+                
+                onFlatShadingToggle={handleFlatShadingToggle}
+                onVertexColorsToggle={handleVertexColorsToggle}
+                onClose={handleCloseInfoPanel2D}
+              />
       )}
+      
       <div className="button-container">
-        
         <ImportContainer onImport={handleImport} />
         <CloudContainer onImport={handleImport} />
       </div>
-      
     </div>
   );
 }
