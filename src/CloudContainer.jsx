@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ref, listAll, getDownloadURL } from 'firebase/storage';
+import { ref, listAll, getDownloadURL } from '@firebase/storage';
 import { storage } from './firebase.jsx';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
