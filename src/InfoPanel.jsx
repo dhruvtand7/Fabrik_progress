@@ -38,6 +38,8 @@ function InfoPanel({
   onGeometryChange,
   onSizeChange,
   onExport,
+  handleExport,
+  exportTrigger
 }) {
   if (!object) return null;
 
@@ -80,48 +82,7 @@ function InfoPanel({
           <Text fontSize={14}>{material.type}</Text>
         </Container>
       </Card>
-      
-      <Container positionRight={600} fontSize={10} borderRadius={32} padding={2} flexDirection="column" alignItems="flex-start" gapRow={16} opacity={0}>
-        <TabBar value={material.side} onValueChange={(value) => onSideChange(object, value)}>
-          {sideOptions.map((option) => (
-            <TabBarItem key={option.value} value={option.value} icon={option.ico}>
-              <Text>{option.label}</Text>
-            </TabBarItem>
-          ))}
-        </TabBar>
-      </Container>
-      <Container positionLeft={0} fontSize={10} borderRadius={32} padding={20} flexDirection="column" alignItems="flex-start" gapRow={16} opacity={0}>
-        <Tabs value={geometry.type} onValueChange={(value) => onGeometryChange(object, value)}>
-          {geometryOptions.map((option) => (
-            <TabsButton key={option.value} value={option.value} >
-              {option.ico}
-            </TabsButton>
-          ))}
-        </Tabs>
-      </Container>
-
-      <Container padding={20} flexDirection="row" gapColumn={6} alignItems="flex-start"  opacity={5}>
-      <Scaling color={"white"} padding={0} borderRadius={32} fontSize={20} size={100} positionBottom={3} scale={50}/>
-        <Slider Text="Size" icon={Scaling} size="xs" range={1} step={0.1} value={object.scale.x} onValueChange={(value) => onSizeChange(object, value)} width={250}/>
-      
-      </Container>
-      
-      <Container padding={20} flexDirection="row" gapColumn={6} alignItems="flex-start"  opacity={5}>
-        <Checkbox selected={material.wireframe} onSelectedChange={() => onWireframeToggle(object)}></Checkbox>
-        <Text positionTop={2} fontSize={20} color={"white"}>Wireframe</Text>
-      </Container>
-      
-      
-      
-      
-      <Container positionTop={110} positionRight={300} flexDirection="column" md={{ flexDirection: 'row' }} gap={32}>
-      <Button Variant="icon" onClick={onExport} size="lg" backgroundColor={'grey'} backgroundOpacity={0.35} icon={Download}>
-        <Text>Download file</Text>
-      </Button>
-      </Container>
-
-      
-    </group>  
+     </group>  
   );
 }
 

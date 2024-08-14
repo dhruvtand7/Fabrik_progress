@@ -12,18 +12,21 @@
   "dependencies": {
     "@coconut-xr/lucide-koestlich": "^0.0.3",
     "@react-three/drei": "^9.107.0",
-    "@react-three/fiber": "^8.16.8",
+    "@react-three/fiber": "^8.17.5",
     "@react-three/uikit": "^0.3.6",
     "@react-three/uikit-lucide": "^0.3.6",
-    "@react-three/xr": "^5.7.1",
+    "@react-three/xr": "^6.1.1",
     "bootstrap": "^5.3.0",
     "file-saver": "^2.0.5",
     "firebase": "^10.12.2",
+    "leva": "^0.9.35",
     "react": "^18.3.1",
     "react-bootstrap": "^2.10.2",
+    "react-color": "^2.19.3",
     "react-dom": "^18.3.1",
+    "react-draggable": "^4.4.6",
     "react-icons": "^5.2.1",
-    "three": "^0.164.1"
+    "three": "^0.167.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.66",

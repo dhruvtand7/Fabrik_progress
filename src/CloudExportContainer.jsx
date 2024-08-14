@@ -6,7 +6,7 @@ import { Button } from './components/apfel/button';
 import { Container, Text } from '@react-three/uikit';
 import { Input } from './components/apfel/input'; // Assuming you have an Input component in your UI kit
 
-const CloudExportContainer = ({ sceneRef, onSuccess }) => {
+const CloudExportContainer = ({ modelRef, onSuccess }) => {
   const [fileName, setFileName] = useState('');
 
   const handleExportToCloud = async () => {
@@ -26,7 +26,7 @@ const CloudExportContainer = ({ sceneRef, onSuccess }) => {
       maxTextureSize: 1024 || Infinity,
     };
 
-    exporter.parse(sceneRef.current, async (result) => {
+    exporter.parse(modelRef.current, async (result) => {
       try {
         if (result instanceof ArrayBuffer) {
           const file = new Blob([result], { type: 'application/octet-stream' });
@@ -74,7 +74,7 @@ const CloudExportContainer = ({ sceneRef, onSuccess }) => {
   };
 
   return (
-    <Container flexDirection="column" md={{ flexDirection: 'row' }} gap={32}>
+    <Container flexDirection="column" md={{ flexDirection: 'row' }} gap={32} positionBottom={85}>
       <Input 
         placeholder="Enter file name" 
         value={fileName} 
