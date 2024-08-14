@@ -45,7 +45,7 @@ export default function App() {
     const selectedObjectRef = useRef(null);
     const [customAnimations, setCustomAnimations] = useState({});
     const [highlightedMesh, setHighlightedMesh] = useState(null);
-    const modelRef = useRef(null);
+    const modelRef = useRef();
     const [selectedObject, setSelectedObject] = useState(null);
     const [isExploding, setIsExploding] = useState(false);
     const [showSuccessMessage, setShowSuccessMessage] = useState(false);

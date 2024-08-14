@@ -8,7 +8,7 @@ export const importModel = (fileOrUrl, onLoad = () => {}, onProgress = () => {},
         reader.onload = function (e) {
             const contents = e.target.result;
             loader.parse(contents, '', function (gltf) {
-                onLoad(gltf); // Ensure onLoad is a function
+                onLoad(gltf);
             }, onError);
         };
         reader.readAsArrayBuffer(fileOrUrl);
